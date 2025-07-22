@@ -1,34 +1,25 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Protected } from 'src/decorators/protected.decorator';
+import { Roles } from 'src/decorators/role.decorator';
+import { UserRole } from './enums/role.enum';
+import { IsOwner } from 'src/decorators/is-owner.decorator';
+import { IsOwnerGuard } from 'src/guards/is-owner.guard';
+
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.userService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+  @Get(':id/courses')
+  @Protected(true)
+  @Roles([UserRole.Student])
+  @IsOwner(true)
+  @UseGuards(IsOwnerGuard)
+  @ApiOperation({ summary: 'Get all courses for a student' })
+  @ApiResponse({ status: 200, description: 'Courses returned successfully' })
+  async getStudentCourses(@Param('id') id: string) {
+    return this.userService.getUserCourses(id);
   }
 }

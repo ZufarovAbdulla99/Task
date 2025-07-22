@@ -1,26 +1,102 @@
-import { Injectable } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { UserService } from 'src/modules/user/user.service';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+import { UserRole } from 'src/modules/user/enums/role.enum';
+import { RegisterDto } from './dto/register-dto';
+import { LoginUserDto } from './dto/login-dto';
 
 @Injectable()
 export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
+  constructor(
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  private generateToken(payload: {
+    userId: string;
+    email: string;
+    role: string;
+  }) {
+    const accessToken = this.jwtService.sign(payload, {
+      secret: process.env.JWT_ACCESS_SECRET,
+      expiresIn: process.env.JWT_ACCESS_EXPIRES_IN || '24h',
+    });
+
+    return { accessToken };
   }
 
-  findAll() {
-    return `This action returns all auth`;
+  async register(dto: RegisterDto) {
+    try {
+      const existing = await this.userService.findByEmail(dto.email);
+      if (existing) {
+        throw new BadRequestException('Email already registered');
+      }
+
+      const hashed = await bcrypt.hash(dto.password, 10);
+
+      const user = await this.userService.create(
+        { name: dto.name, email: dto.email, password: hashed },
+        UserRole.Student,
+      );
+
+      const accessToken = this.generateToken({
+        userId: user._id.toString(),
+        email: user.email,
+        role: user.role,
+      });
+
+      return {
+        ...accessToken,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+        message: 'Ro‘yxatdan o‘tish muvaffaqiyatli',
+      };
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
+  async login(dto: LoginUserDto) {
+    try {
+      const user = await this.userService.findByEmail(dto.email);
 
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
-  }
+      if (!user) {
+        throw new UnauthorizedException('Email yoki parol noto‘g‘ri');
+      }
 
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+      const isMatch = await bcrypt.compare(dto.password, user.password);
+      if (!isMatch) {
+        throw new UnauthorizedException('Email yoki parol noto‘g‘ri');
+      }
+
+      const accessToken = this.generateToken({
+        userId: user._id.toString(),
+        email: user.email,
+        role: user.role,
+      });
+
+      return {
+        ...accessToken,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+        message: 'Muvaffaqiyatli login qilindi',
+      };
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
+    }
   }
 }
