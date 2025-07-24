@@ -6,8 +6,8 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
-import { RequestInterface } from './check-auth.guard';
 import { Roles } from 'src/decorators/role.decorator';
+import { RequestInterface } from './check-auth.guard';
 
 @Injectable()
 export class CheckRoleGuard implements CanActivate {
@@ -17,7 +17,7 @@ export class CheckRoleGuard implements CanActivate {
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const request = context.switchToHttp().getRequest<RequestInterface>();
-    const roles = this.reflector.get(Roles, context.getHandler());
+    const roles = this.reflector.get<string[]>('roles', context.getHandler());
 
     if (!roles) {
       return true;

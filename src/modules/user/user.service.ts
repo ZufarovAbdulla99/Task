@@ -60,20 +60,29 @@ export class UserService {
   }
 
   async getUserCourses(id: string) {
-    try {
-      const user = await this.userModel
-        .findById(id)
-        .populate('registeredCourses');
-
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-
-      return user.registeredCourses;
-    } catch (error) {
-      throw error;
+  try {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid user ID');
     }
+
+    const user = await this.userModel.findById(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const fieldToPopulate =
+      user.role === UserRole.Teacher ? 'teachingCourses' : 'enrolledCourses';
+
+    const populatedUser = await this.userModel
+      .findById(id)
+      .populate(fieldToPopulate);
+
+    return populatedUser[fieldToPopulate];
+  } catch (error) {
+    throw error;
   }
+}
+
 
   async update(id: string, updateUserDto: UpdateUserDto) {
     try {
@@ -113,5 +122,21 @@ export class UserService {
     } catch (error) {
       throw error;
     }
+  }
+
+  async addTeachingCourse(userId: string, courseId: string) {
+    return this.userModel.findByIdAndUpdate(
+      userId,
+      { $addToSet: { teachingCourses: courseId } },
+      { new: true },
+    );
+  }
+
+  async addEnrolledCourse(userId: string, courseId: string) {
+    return this.userModel.findByIdAndUpdate(
+      userId,
+      { $addToSet: { enrolledCourses: courseId } },
+      { new: true },
+    );
   }
 }

@@ -9,6 +9,7 @@ import { CheckAuthGuard } from './guards/check-auth.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { CheckRoleGuard } from './guards/check-role.guard';
 import { JwtModule } from '@nestjs/jwt';
+import { SeedModule } from './modules/seeds/seeds.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { JwtModule } from '@nestjs/jwt';
     AuthModule,
     CourseModule,
     TaskModule,
+    SeedModule
   ],
   providers: [
     {
@@ -42,7 +44,7 @@ import { JwtModule } from '@nestjs/jwt';
     {
       useClass: CheckRoleGuard,
       provide: APP_GUARD
-    }
+    },
   ],
 })
 export class AppModule {}

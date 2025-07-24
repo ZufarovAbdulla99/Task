@@ -19,7 +19,7 @@ export class AuthService {
   ) {}
 
   private generateToken(payload: {
-    userId: string;
+    sub: string;
     email: string;
     role: string;
   }) {
@@ -41,18 +41,15 @@ export class AuthService {
       const hashed = await bcrypt.hash(dto.password, 10);
 
       const user = await this.userService.create(
-        { name: dto.name, email: dto.email, password: hashed },
+        {
+          name: dto.name,
+          email: dto.email,
+          password: hashed,
+        },
         UserRole.Student,
       );
 
-      const accessToken = this.generateToken({
-        userId: user._id.toString(),
-        email: user.email,
-        role: user.role,
-      });
-
       return {
-        ...accessToken,
         user: {
           id: user._id,
           name: user.name,
@@ -79,14 +76,14 @@ export class AuthService {
         throw new UnauthorizedException('Email yoki parol noto‘g‘ri');
       }
 
-      const accessToken = this.generateToken({
-        userId: user._id.toString(),
+      const tokens = this.generateToken({
+        sub: user._id.toString(),
         email: user.email,
         role: user.role,
       });
 
       return {
-        ...accessToken,
+        ...tokens,
         user: {
           id: user._id,
           name: user.name,

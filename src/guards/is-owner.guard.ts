@@ -3,32 +3,45 @@ import {
   ExecutionContext,
   ForbiddenException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { RequestInterface } from './check-auth.guard';
-import { IsOwner } from 'src/decorators/is-owner.decorator';
+import { IS_OWNER_KEY } from '../decorators/is-owner.decorator';
+import { ModuleRef } from '@nestjs/core';
+import { getModelToken } from '@nestjs/mongoose';
 
 @Injectable()
-export class IsOwnerGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+export class OwnerGuard implements CanActivate {
+  constructor(
+    private reflector: Reflector,
+    private moduleRef: ModuleRef,
+  ) {}
 
-  canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest<RequestInterface>();
-    const isOwnerProtected = this.reflector.get<boolean>(
-      IsOwner,
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const userId = request.userId;
+    const resourceId = request.params.id;
+
+    if (!userId) throw new ForbiddenException('User ID not found');
+    if (!resourceId) throw new ForbiddenException('Resource ID not found');
+
+    const metadata = this.reflector.get<{ model: any; field: string }>(
+      IS_OWNER_KEY,
       context.getHandler(),
     );
 
-    if (!isOwnerProtected) return true;
+    if (!metadata) return true;
 
-    const paramId = request.params.id;
+    const { model, field } = metadata;
+    const modelToken = getModelToken(model.name);
+    const modelInstance = this.moduleRef.get(modelToken, { strict: false });
 
-    if (!paramId || !request.userId) {
-      throw new ForbiddenException('Access denied: no ID or user info');
-    }
+    const resource = await modelInstance.findById(resourceId).lean();
+    if (!resource) throw new NotFoundException('Resource not found');
 
-    if (paramId !== request.userId) {
-      throw new ForbiddenException("Siz faqat o'z ma'lumotlaringizni ko‘rishingiz mumkin");
+    const ownerField = field || 'createdBy';
+    if (resource[ownerField].toString() !== userId.toString()) {
+      throw new ForbiddenException('You are not the owner of this resource');
     }
 
     return true;

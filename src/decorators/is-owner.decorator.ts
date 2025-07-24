@@ -1,3 +1,6 @@
-import { Reflector } from '@nestjs/core';
+import { SetMetadata } from '@nestjs/common';
 
-export const IsOwner = Reflector.createDecorator<boolean>();
+export const IS_OWNER_KEY = 'isOwnerModelAndField';
+
+export const IsOwner = (model: any, field: string = 'createdBy') =>
+  SetMetadata(IS_OWNER_KEY, { model, field });

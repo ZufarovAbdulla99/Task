@@ -13,7 +13,7 @@ export class LoginUserDto {
   email: string;
 
   @ApiProperty({
-    example: 'secret123',
+    example: 'password123',
     type: 'string',
     required: true,
     description: 'User password for login',

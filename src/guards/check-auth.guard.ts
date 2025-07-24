@@ -4,24 +4,25 @@ import {
   ConflictException,
   ExecutionContext,
   Injectable,
+  UnauthorizedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import {
-  JsonWebTokenError,
   JwtService,
-  NotBeforeError,
   TokenExpiredError,
+  NotBeforeError,
+  JsonWebTokenError,
 } from '@nestjs/jwt';
 import { Request } from 'express';
 import { Observable } from 'rxjs';
-import { Protected } from 'src/decorators/protected.decorator';
+import { PROTECTED_KEY } from 'src/decorators/protected.decorator';
 import { UserRole } from 'src/modules/user/enums/role.enum';
 
-export declare interface RequestInterface extends Request {
-  userId: string | undefined;
-  role: string | undefined;
+export interface RequestInterface extends Request {
+  userId?: string;
+  role?: string;
 }
 
 @Injectable()
@@ -35,59 +36,68 @@ export class CheckAuthGuard implements CanActivate {
   canActivate(
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
-    const ctx = context.switchToHttp();
-    const request = ctx.getRequest<RequestInterface>();
+    const request = context.switchToHttp().getRequest<RequestInterface>();
 
-    const isProtected = this.reflector.get<boolean>(
-      Protected,
-      context.getHandler(),
+    const isProtected = this.reflector.getAllAndOverride<boolean>(
+      PROTECTED_KEY,
+      [context.getHandler(), context.getClass()],
     );
 
-    if (!isProtected) {
-      // NOTE: Agar endpoint himoyalanmagan bo‘lsa, default role sifatida student beriladi
+    if (isProtected === undefined || isProtected === false) {
       request.role = UserRole.Student;
       return true;
     }
 
-    const bearerToken = request.headers['authorization'];
+    const authorization = request.headers['authorization'];
 
-    if (
-      !(
-        bearerToken &&
-        bearerToken.startsWith('Bearer') &&
-        bearerToken.split('Bearer ')[1]?.length
-      )
-    ) {
-      throw new BadRequestException('Please provide valid bearer token');
+    if (!authorization) {
+      throw new BadRequestException('Please provide a valid bearer token');
     }
 
-    const token = bearerToken.split('Bearer ')[1];
+    const [type, token] = authorization.split(' ');
+
+    if (type !== 'Bearer' || !token) {
+      throw new BadRequestException('Invalid token format');
+    }
 
     let decoded: any;
+
     try {
       decoded = this.jwtService.verify(token, {
         secret: this.config.get<string>('JWT_ACCESS_SECRET'),
       });
+
+      // console.log('Decoded token:', decoded); // Debug uchun
     } catch (error) {
-      // FIXME: Turli xatoliklar uchun alohida xabarlar
       if (error instanceof TokenExpiredError) {
-        throw new UnprocessableEntityException('Token already expired');
+        throw new UnprocessableEntityException('Token expired');
       }
 
       if (error instanceof NotBeforeError) {
-        throw new ConflictException('Token not before error');
+        throw new ConflictException('Token not active yet');
       }
 
       if (error instanceof JsonWebTokenError) {
-        throw new BadRequestException(error.message);
+        throw new UnauthorizedException('Invalid token');
       }
 
-      return false;
+      throw new UnauthorizedException('Authentication failed');
     }
 
-    // NOTE: Token payloadda `userId` bo'lishi kerak
-    request.userId = decoded?.userId;
-    request.role = decoded?.role;
+    // Token payload'dan userId va role'ni olish
+    request.userId = decoded?.sub || decoded?.userId || decoded?.id;
+    request.role = decoded?.role || UserRole.Student;
+
+    // console.log('Set userId:', request.userId); // Debug uchun
+    // console.log('Set role:', request.role); // Debug uchun
+
+    if (typeof request.userId !== 'string') {
+      throw new UnauthorizedException('Invalid user ID in token');
+    }
+
+    if (!request.userId) {
+      throw new UnauthorizedException('Invalid token payload');
+    }
 
     return true;
   }

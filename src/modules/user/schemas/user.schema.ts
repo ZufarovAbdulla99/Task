@@ -3,7 +3,7 @@ import { Document, Types } from 'mongoose';
 import { UserRole } from '../enums/role.enum';
 
 @Schema({ timestamps: true })
-export class User extends Document {
+export class User {
   @Prop({ required: true })
   name: string;
 
@@ -16,11 +16,16 @@ export class User extends Document {
   @Prop({ required: true, enum: UserRole })
   role: UserRole;
 
-  @Prop({ type: [{ type: Types.ObjectId, ref: 'Course' }] })
-  registeredCourses?: Types.ObjectId[];
-
   @Prop({ type: [{ type: Types.ObjectId, ref: 'Task' }] })
   assignedTasks?: Types.ObjectId[];
+
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Course' }] })
+  teachingCourses?: Types.ObjectId[]; // Teacher uchun
+
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Course' }], default: [] })
+  enrolledCourses?: Types.ObjectId[]; // Student uchun
 }
+
+export type UserDocument = User & Document;
 
 export const UserSchema = SchemaFactory.createForClass(User);
