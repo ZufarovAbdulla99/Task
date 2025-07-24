@@ -1,85 +1,188 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 📘 Task and Course Management API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## 🇬🇧 English
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+### 🔧 Technologies Used
 
-## Description
+* **NestJS** (Backend framework)
+* **MongoDB + Mongoose** (Database)
+* **TypeScript**
+* **JWT** (Authentication)
+* **bcrypt** (Password hashing)
+* **Swagger** (API Documentation)
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+### 🚀 Setup Instructions
 
 ```bash
-$ npm install
+# 1. Install dependencies
+npm install
+
+# 2. Setup environment variables
+# Create a `.env` file in root:
+APP_PORT=3000
+APP_HOST=localhost
+
+JWT_ACCESS_SECRET=secret123
+JWT_ACCESS_EXPIRES_IN=1d
+
+MONGO_URI=mongodb://localhost:27017/task
+
+# 3. Run the app
+npm run start:dev
 ```
 
-## Compile and run the project
+---
+
+### 🔑 Authentication Endpoints
+
+* `POST /auth/register` – Register user (admin/teacher/student)
+* `POST /auth/login` – Login and get access token (JWT)
+
+---
+
+### 🎯 Functional Endpoints
+
+#### 📝 Tasks
+
+* `POST /tasks` – Create task (`admin` and `teacher` only)
+* `GET /tasks` – Get tasks for logged in user (students see assigned, teachers see created, admins see all)
+* `GET /tasks/:id` – Get single task (access control applied)
+* `PUT /tasks/:id` – Update task (only creator or admin)
+* `DELETE /tasks/:id` – Delete task (only creator or admin)
+
+#### 📚 Courses
+
+* `POST /courses` – Create course (admin only)
+* `GET /courses` – List all courses
+* `POST /courses/:courseId/register` – Student registers to course
+* `GET /students/:id/courses` – Get student’s courses (auth required)
+
+#### 👥 Students
+
+* `POST /auth/register` – Register a new student.
+A new user with the role student is created. No token is returned upon registration.
+* `POST /auth/login` – Login as a student.
+Upon successful login, a JWT token is returned.
+🔔 Note: All user types (student, teacher, and admin) are stored in a single users collection, differentiated by their role field.
+
+---
+
+### 🧠 Business Logic & Rules
+
+* JWT-based authentication & role guard
+* Student can’t register same course twice
+* Role-based access control for task & course actions
+* Swagger integrated for API testing
+* Seeding logic adds:
+
+  * 1 Admin
+  * 3 Teachers
+  * 2 Students
+  * 2 Courses
+  * Each student assigned 2 tasks (MongoDB & NestJS topics)
+
+---
+
+### 📘 Sample Credentials
+
+```txt
+Admin: admin@gmail.com / admin123
+Teacher: teacher@gmail.com / teacher123
+Student1: student1@gmail.com / student123
+Student2: student2@gmail.com / student123
+```
+
+---
+
+## 🇺🇿 O'zbekcha
+
+### 🔧 Texnologiyalar
+
+* **NestJS** (Backend freymvork)
+* **MongoDB + Mongoose** (Ma'lumotlar bazasi)
+* **TypeScript**
+* **JWT** (Autentifikatsiya)
+* **bcrypt** (Parolni xeshlash)
+* **Swagger** (API hujjati)
+
+---
+
+### 🚀 Loyihani ishga tushurish
 
 ```bash
-# development
-$ npm run start
+# 1. Bog'liqliklarni o'rnatish
+npm install
 
-# watch mode
-$ npm run start:dev
+# 2. .env fayl yarating:
+APP_PORT=3000
+APP_HOST=localhost
 
-# production mode
-$ npm run start:prod
+JWT_ACCESS_SECRET=secret123
+JWT_ACCESS_EXPIRES_IN=1d
+
+MONGO_URI=mongodb://localhost:27017/task
+
+# 3. Loyihani ishga tushurish
+npm run start:dev
 ```
 
-## Run tests
+---
 
-```bash
-# unit tests
-$ npm run test
+### 🔑 Autentifikatsiya Endpointlari
 
-# e2e tests
-$ npm run test:e2e
+* `POST /auth/register` – Foydalanuvchi ro'yxatdan o'tkazish
+* `POST /auth/login` – Kirish va JWT token olish
 
-# test coverage
-$ npm run test:cov
+---
+
+### 🎯 Funksional Endpointlar
+
+#### 📝 Vazifalar (Tasks)
+
+* `POST /tasks` – Yangi vazifa yaratish (`admin` va `teacher`)
+* `GET /tasks` – Kirgan foydalanuvchiga tegishli vazifalarni olish
+* `GET /tasks/:id` – Bitta vazifani ko‘rish
+* `PUT /tasks/:id` – Vazifani tahrirlash (faqat yaratgan foydalanuvchi yoki admin)
+* `DELETE /tasks/:id` – Vazifani o‘chirish (faqat yaratgan foydalanuvchi yoki admin)
+
+#### 📚 Kurslar
+
+* `POST /courses` – Yangi kurs yaratish (faqat admin)
+* `GET /courses` – Barcha kurslarni ko‘rish
+* `POST /courses/:courseId/register` – Student kursga yoziladi
+* `GET /students/:id/courses` – Student o‘z kurslarini ko‘radi
+
+#### 👥 Studentlar
+
+* `POST /auth/register` – Student ro‘yxatdan o‘tkazish. Registerdan o'tkanda token berilmidi yengi user yaratiladi student role bilan
+* `POST /auth/login` – Student login qilish. Login qilishda token beriladi 
+
+🔔 Eslatma: Barcha foydalanuvchi turlari (student, teacher va admin) yagona users kolleksiyasida saqlanadi va ular role maydoni orqali farqlanadi.
+---
+
+### 🧠 Qoidalar va Mantiq
+
+* JWT orqali autentifikatsiya
+* Student bir kursga ikki marta yozila olmaydi
+* Ruxsatlar roli asosida boshqariladi
+* Swagger orqali API test qilish mumkin
+* Seed orqali quyidagi malumotlar kiritiladi:
+
+  * 1 ta admin
+  * 3 ta o‘qituvchi
+  * 2 ta student
+  * 2 ta kurs (NestJS va MongoDB)
+  * Har bir studentga 2 tadan task biriktiriladi
+
+---
+
+### 📘 Namuna Login Ma'lumotlar
+
+```txt
+Admin: admin@gmail.com / admin123
+Teacher: teacher@gmail.com / teacher123
+Student1: student1@gmail.com / student123
+Student2: student2@gmail.com / student123
 ```
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
